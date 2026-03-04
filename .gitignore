@@ -1,0 +1,30 @@
+# FASTQ and large sequencing data files
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.bam
+*.bam.bai
+*.sam
+*.bigwig
+*.bw
+*.bed.gz
+*.narrowPeak
+*.broadPeak
+
+# Bowtie2/STAR index files
+*.bt2
+*.bt2l
+
+# R temporary files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Output directories (uncomment if needed)
+# output/
+# results/
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,10 @@
+# ATAC-seq Sample Sheet
+# ----------------------
+# sample_name : fastq/{sample_name}_{lane}_[12].fq.gz の {sample_name} 部分
+#               例) Old-Mock-1_R1_001.fastq.gz → sample_name = Old-Mock-1
+# group       : BAM マージ・比較に使うグループ名 (スペース不可、アンダースコア推奨)
+#               同じ group のサンプルは MergedBAM で統合され bigWig・edgeR 比較に使用される
+#
+# タブ区切り、# で始まる行はコメント
+sample_name	group
+Old-Mock-1	Old_Mock
