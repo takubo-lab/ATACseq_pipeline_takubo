@@ -51,7 +51,7 @@ verify_tools() {
   eval "$(conda shell.bash hook)"
   conda activate "${ENV_NAME}"
 
-  local tools=("bowtie2" "samtools" "macs2" "bedtools" "bamCoverage" "fastqc" "trim_galore" "Rscript")
+  local tools=("bowtie2" "samtools" "macs3" "bedtools" "bamCoverage" "fastqc" "trim_galore" "Rscript")
   local all_ok=true
   for tool in "${tools[@]}"; do
     if command -v "${tool}" &>/dev/null; then
@@ -59,7 +59,7 @@ verify_tools() {
       case "${tool}" in
         bowtie2)     ver=$(bowtie2 --version 2>&1 | head -1 | grep -oP '[\d.]+$' || echo "OK") ;;
         samtools)    ver=$(samtools --version 2>&1 | head -1 | awk '{print $2}') ;;
-        macs2)       ver=$(macs2 --version 2>&1 || echo "OK") ;;
+        macs3)       ver=$(macs3 --version 2>&1 || echo "OK") ;;
         bedtools)    ver=$(bedtools --version 2>&1 | awk '{print $2}') ;;
         bamCoverage) ver=$(bamCoverage --version 2>&1 || echo "OK") ;;
         fastqc)      ver=$(fastqc --version 2>&1 | awk '{print $2}') ;;
