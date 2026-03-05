@@ -49,6 +49,9 @@ provenance.yml
 .conda/
 *.conda
 
+# Personal plot config (個人カスタマイズ — Git非管理)
+plot_config.yml
+
 # System files
 .DS_Store
 Thumbs.db
