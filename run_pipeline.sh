@@ -9,6 +9,8 @@
 #    ./run_pipeline.sh --to 4            # step 1–4 を実行
 #    ./run_pipeline.sh --steps 2b,4c     # 指定 substep のみ実行
 #    ./run_pipeline.sh --force --from 2b # 既存出力を無視して再実行
+#    ./run_pipeline.sh --config /path/to/project/config.sh  # 外部プロジェクト
+#    ./run_pipeline.sh --version         # バージョン表示
 #
 #  ── Substep 一覧 ─────────────────────────────────────────
 #  1a: trim_galore アダプタートリミング
@@ -34,32 +36,17 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# --- 設定読み込み ---
+# =============================================================================
+#  引数パース (設定読み込みより前に実行)
+# =============================================================================
 PIPELINE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${PIPELINE_ROOT}/config.sh"
 
-# --- ログ設定 ---
-mkdir -p "${DIR}/logs"
-LOG="${DIR}/logs/pipeline_$(date +%Y%m%d_%H%M%S).log"
-exec > >(tee -a "$LOG") 2>&1
-
-echo "=============================================="
-echo " ATAC-seq Pipeline"
-echo " Date   : $(date)"
-echo " Project : ${DIR}"
-echo " Log    : ${LOG}"
-echo "  --from ${FROM_STEP}${FROM_SUB}  --to ${TO_STEP}  --force=${FORCE}"
-[[ -n "$ONLY_STEPS" ]] && echo "  --steps ${ONLY_STEPS}"
-echo "=============================================="
-
-# =============================================================================
-#  引数パース
-# =============================================================================
 FROM_STEP=1
 FROM_SUB=""
 TO_STEP=7
 ONLY_STEPS=""          # --steps 用 (カンマ区切り, 例: "2b,5,6")
 FORCE="false"
+CONFIG_FILE=""         # --config 用 (外部プロジェクトの config.sh)
 declare -A STEP_FROM_SUB   # --steps 用: step番号 → 開始 substep
 
 # stage spec "4b" → PARSED_STEP=4, PARSED_SUB=b
@@ -88,17 +75,62 @@ while [[ $# -gt 0 ]]; do
         STEP_FROM_SUB["${PARSED_STEP}"]="${PARSED_SUB}"
       done
       shift 2 ;;
+    --config)
+      CONFIG_FILE="$2"
+      shift 2 ;;
     --force)
       FORCE="true"
       shift ;;
+    --version)
+      source "${PIPELINE_ROOT}/scripts/utils.sh"
+      echo "ATACseq_pipeline_takubo v$(get_pipeline_version) ($(get_git_commit))"
+      exit 0 ;;
     -h|--help)
-      grep '^#' "$0" | head -45 | sed 's/^# \{0,2\}//'
+      grep '^#' "$0" | head -50 | sed 's/^# \{0,2\}//'
       exit 0 ;;
     *)
       echo "Unknown argument: $1  (try --help)"
       exit 1 ;;
   esac
 done
+
+# --- ユーティリティ読み込み ---
+source "${PIPELINE_ROOT}/scripts/utils.sh"
+
+# --- 設定読み込み ---
+if [[ -n "$CONFIG_FILE" ]]; then
+  if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "ERROR: Config file not found: ${CONFIG_FILE}"
+    exit 1
+  fi
+  source "$CONFIG_FILE"
+else
+  source "${PIPELINE_ROOT}/config.sh"
+fi
+
+# --- ロック取得 ---
+acquire_lock "${DIR}"
+
+# --- ログ設定 ---
+mkdir -p "${DIR}/logs"
+LOG="${DIR}/logs/pipeline_$(date +%Y%m%d_%H%M%S).log"
+exec > >(tee -a "$LOG") 2>&1
+
+# --- バナー表示 ---
+echo "=============================================="
+echo " ATAC-seq Pipeline"
+print_version_banner
+echo " Date   : $(date)"
+echo " User   : $(whoami)@$(hostname)"
+echo " Project : ${DIR}"
+echo " Log    : ${LOG}"
+echo "  --from ${FROM_STEP}${FROM_SUB}  --to ${TO_STEP}  --force=${FORCE}"
+[[ -n "$ONLY_STEPS" ]] && echo "  --steps ${ONLY_STEPS}"
+[[ -n "$CONFIG_FILE" ]] && echo "  --config ${CONFIG_FILE}"
+echo "=============================================="
+
+# --- Provenance 記録 ---
+generate_provenance "${DIR}"
 
 # ── step を実行するか判断 ──────────────────────────────────
 should_run() {
@@ -253,4 +285,5 @@ echo ""
 echo "=============================================="
 echo " Pipeline COMPLETE: $(date)"
 echo " Log: ${LOG}"
+echo " Provenance: ${DIR}/provenance.yml"
 echo "=============================================="

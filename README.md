@@ -1,28 +1,163 @@
-# ATAC-seq Pipeline
+# ATAC-seq Pipeline (Takubo Lab)
 
 ペアエンド ATAC-seq データの全工程を自動化するパイプラインです。  
 Trim → Align → Peak Call → Peak Count → Scale/BigWig → DAR → HOMER → PCA の順に実行します。
+
+## パイプライン概要
+
+| Step | Script | 内容 |
+|------|--------|------|
+| 1 | `scripts/01_mapping.sh` | trim_galore → bowtie2 → picard (トリミング・アライメント・重複除去) |
+| 2 | `scripts/02_peakcall.sh` | MACS3 → 250bp 固定長ピーク |
+| 3 | `scripts/03_peak_counts.R` | csaw カウント → 閾値フィルタ |
+| 4 | `scripts/04_scale_deeptools.sh` | BAM マージ → scale factor → bigWig |
+| 5 | `scripts/05_DAR_edgeR.R` | DAR 検出 (edgeR QL) |
+| 6 | `scripts/06_HOMER.sh` | HOMER モチーフ解析 |
+| 7 | `scripts/07_PCA_plots.R` | PCA・相関ヒートマップ・Venn 図 |
+
+## クイックスタート
+
+### 1. セットアップ
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/takubo-lab/ATACseq_pipeline_takubo.git
+cd ATACseq_pipeline_takubo
+```
+
+### 2-A. プロジェクト初期化（推奨）
+
+パイプラインコードとデータを分離して管理する方法:
+
+```bash
+# 新しいプロジェクトを初期化
+bash init_project.sh /path/to/my_project hg38
+
+# サンプル情報を編集
+vim /path/to/my_project/samples.tsv
+
+# FASTQファイルを配置
+cp *.fq.gz /path/to/my_project/fastq/
+
+# パイプライン実行
+bash run_pipeline.sh --config /path/to/my_project/config.sh
+```
+
+### 2-B. 直接実行（シンプル）
+
+パイプラインディレクトリ内で直接解析する方法:
+
+**`config.sh`** — ゲノム、パス、パラメータを設定:
+```bash
+GENOME="hg38"              # "hg38" or "mm10"
+GENOME_SIZE_MACS="hs"      # "hs" or "mm"
+```
+
+**`samples.tsv`** — サンプル情報を記載:
+```
+sample_name	group
+Old-Mock-1	Old_Mock
+Old-Mock-2	Old_Mock
+Young-Ctrl-1	Young_Ctrl
+```
+
+### 3. FASTQファイルを配置
+
+```bash
+# fastq/ ディレクトリにfq.gzファイルを配置
+# ファイル名: {sample_name}_{lane}_{1,2}.fq.gz
+#         or: {sample_name}_R{1,2}_{anything}.fastq.gz
+```
+
+### 4. パイプライン実行
+
+```bash
+# 全ステップ実行
+bash run_pipeline.sh
+
+# 特定のステップから開始
+bash run_pipeline.sh --from 4
+
+# 特定のステップのみ実行
+bash run_pipeline.sh --steps 5,6,7
+
+# substep 指定
+bash run_pipeline.sh --from 4b
+
+# プロジェクト指定で実行
+bash run_pipeline.sh --config /path/to/my_project/config.sh
+
+# 既存出力を無視して強制再実行
+bash run_pipeline.sh --force --from 2a
+
+# バージョン表示
+bash run_pipeline.sh --version
+```
+
+---
+
+## バージョン管理・マルチユーザー運用
+
+### バージョニング
+
+パイプラインは `VERSION` ファイルでセマンティックバージョニングを管理:
+- パッチ (1.0.x): バグ修正
+- マイナー (1.x.0): 機能追加（後方互換）
+- メジャー (x.0.0): 破壊的変更
+
+リリース時は git tag を使用:
+```bash
+git tag -a v1.1.0 -m "Add new feature"
+git push origin v1.1.0
+```
+
+### Provenance (実行記録)
+
+パイプライン実行時に `provenance.yml` が自動生成され、以下を記録:
+- パイプラインバージョン・コミット
+- 実行日時・ユーザー・ホスト名
+- ソフトウェアバージョン (bowtie2, samtools, MACS3, R, deeptools 等)
+- config.sh の SHA256 ハッシュ
+- 主要パラメータ
+
+### ロック機構
+
+同一プロジェクトでの同時実行を防止する `.pipeline.lock` ファイルによるロック機構を搭載。
+前回の実行がクラッシュした場合は手動で削除:
+```bash
+rm /path/to/project/.pipeline.lock
+```
 
 ---
 
 ## ディレクトリ構成
 
 ```
-./
-├── config.sh            ← 【唯一の設定ファイル】実験ごとにここだけ編集
-├── samples.tsv          ← サンプル名とグループの対応表
-├── run_pipeline.sh      ← パイプライン実行スクリプト
+ATACseq_pipeline_takubo/
+├── VERSION                # パイプラインバージョン
+├── config.sh              ← 【唯一の設定ファイル】実験ごとにここだけ編集
+├── samples.tsv            ← サンプル名とグループの対応表
+├── init_project.sh        ← プロジェクト初期化スクリプト
+├── run_pipeline.sh        ← パイプライン実行スクリプト
 ├── scripts/
-│   ├── 01_mapping.sh         # Step 1: trim_galore → bowtie2 → picard
-│   ├── 02_peakcall.sh        # Step 2: MACS3 → 250bp 固定長ピーク
-│   ├── 03_peak_counts.R      # Step 3: csaw カウント → 閾値フィルタ
-│   ├── 04_scale_deeptools.sh # Step 4: BAM マージ → scale factor → bigWig
-│   ├── 04a_scale_factor.R    #         (scale factor 計算 R スクリプト)
-│   ├── 05_DAR_edgeR.R        # Step 5: DAR 検出 (edgeR QL)
-│   ├── 06_HOMER.sh           # Step 6: HOMER モチーフ解析
-│   └── 07_PCA_plots.R        # Step 7: PCA・相関ヒートマップ・Venn
-└── fastq/
-    └── {sample_name}_{lane}_[1|2].fq.gz
+│   ├── utils.sh                # ユーティリティ関数 (バージョン・provenance・ロック)
+│   ├── 01_mapping.sh           # Step 1: trim_galore → bowtie2 → picard
+│   ├── 02_peakcall.sh          # Step 2: MACS3 → 250bp 固定長ピーク
+│   ├── 03_peak_counts.R        # Step 3: csaw カウント → 閾値フィルタ
+│   ├── 04_scale_deeptools.sh   # Step 4: BAM マージ → scale factor → bigWig
+│   ├── 04a_scale_factor.R      #         (scale factor 計算 R スクリプト)
+│   ├── 05_DAR_edgeR.R          # Step 5: DAR 検出 (edgeR QL)
+│   ├── 06_HOMER.sh             # Step 6: HOMER モチーフ解析
+│   └── 07_PCA_plots.R          # Step 7: PCA・相関ヒートマップ・Venn
+├── fastq/                 # 入力FASTQファイル (gitignore)
+│   └── {sample_name}_{lane}_[1|2].fq.gz
+├── trimmed/               # trim_galore 後 FASTQ (gitignore)
+├── BAM/                   # 最終 BAM (gitignore)
+├── Peak_nomodel/          # ピーク BED・カウント行列・DAR 結果 (gitignore)
+├── MergedBAM/             # グループ別マージ BAM (gitignore)
+├── bw_for_deeptools/      # bigWig ファイル (gitignore)
+├── Plots/                 # PCA・ヒートマップ等 (gitignore)
+└── logs/                  # 実行ログ (gitignore)
 ```
 
 ### 出力ディレクトリ (実行後に自動生成)
@@ -35,6 +170,7 @@ MergedBAM/        # グループ別マージ BAM
 bw_for_deeptools/ # bigWig ファイル
 Plots/            # PCA・ヒートマップ・散布図
 logs/             # 実行ログ (タイムスタンプ付き)
+provenance.yml    # 実行記録 (バージョン・ユーザー・ソフトウェア情報)
 ```
 
 ---
@@ -59,6 +195,28 @@ logs/             # 実行ログ (タイムスタンプ付き)
 ---
 
 ## セットアップ手順
+
+### 方法A: プロジェクト初期化（推奨 — マルチユーザー運用向け）
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/takubo-lab/ATACseq_pipeline_takubo.git
+cd ATACseq_pipeline_takubo
+
+# 新しいプロジェクトを初期化
+bash init_project.sh /data/ATACseq/240101_experiment hg38
+
+# サンプル情報を編集
+vim /data/ATACseq/240101_experiment/samples.tsv
+
+# FASTQファイルを配置
+cp *.fq.gz /data/ATACseq/240101_experiment/fastq/
+
+# パイプライン実行
+bash run_pipeline.sh --config /data/ATACseq/240101_experiment/config.sh
+```
+
+### 方法B: 直接実行（シンプル）
 
 ### 1. `samples.tsv` を編集
 
@@ -118,6 +276,12 @@ MACS3_ENV="$HOME/venvs/venv_macs3/bin/activate"
 
 # 既存出力を無視して強制再実行
 ./run_pipeline.sh --force --from 2a
+
+# 外部プロジェクトの config.sh を指定して実行
+./run_pipeline.sh --config /path/to/project/config.sh
+
+# バージョン表示
+./run_pipeline.sh --version
 
 # ヘルプ表示
 ./run_pipeline.sh --help
@@ -283,3 +447,17 @@ PEAK_LOGCPM_THRESHOLD="auto"  # 自動検出 (確認省略したい場合)
 | `bw_for_deeptools/{group}.bw` | スケール補正 bigWig |
 | `Plots/PCA_PC1_PC2.png` 等 | PCA・相関ヒートマップ・Venn 図 |
 | `logs/pipeline_{timestamp}.log` | 実行ログ |
+| `provenance.yml` | 実行記録 (パイプラインバージョン・ソフトウェア情報) |
+
+## 対応ゲノム
+
+| Genome | Bowtie2 Index | Blacklist | Chrom Sizes |
+|--------|--------------|-----------|-------------|
+| hg38 | `~/Genome/hg38/hg38` | `~/Genome/hg38/hg38_blacklist_v2.bed` | `~/Genome/hg38/hg38.chrom.sizes` |
+| mm10 | `~/Genome/mm10/mm10` | `~/Genome/mm10/mm10_blacklist_v2.bed` | `~/Genome/mm10/mm10.chrom.sizes` |
+
+パスは `config.sh` で変更可能。
+
+## License
+
+Internal use — Takubo Lab
