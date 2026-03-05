@@ -104,6 +104,38 @@ bash run_pipeline.sh --version
 
 ## バージョン管理・マルチユーザー運用
 
+### 環境セットアップ
+
+#### Linux フルパイプライン: Conda
+
+Step 1〜7 をすべて実行する場合 (Linux / WSL):
+
+```bash
+bash setup_env.sh
+conda activate atacseq_takubo
+bash run_pipeline.sh
+```
+
+#### R 解析のみ: renv (Windows / Mac / Linux 共通)
+
+Step 3, 5, 7 など R スクリプトのみを手元の Windows/Mac で実行する場合:
+
+```r
+# ターミナルから
+Rscript setup_renv.R
+
+# または RStudio コンソールで
+renv::restore()
+```
+
+> **RStudio** でプロジェクトを開くと `.Rprofile` により renv が自動アクティベートされます。
+> `renv::restore()` を実行するだけで `renv.lock` に記載された全パッケージが同一バージョンでインストールされます。
+
+| 環境 | 用途 | セットアップ |
+|------|------|-------------|
+| Conda (`environment.yml`) | Linux フルパイプライン (Bash + R) | `bash setup_env.sh` |
+| renv (`renv.lock`) | R 解析のみ (Windows / Mac / Linux) | `Rscript setup_renv.R` |
+
 ### バージョニング
 
 パイプラインは `VERSION` ファイルでセマンティックバージョニングを管理:
@@ -141,8 +173,12 @@ rm /path/to/project/.pipeline.lock
 ```
 ATACseq_pipeline_takubo/
 ├── VERSION                # パイプラインバージョン
-├── environment.yml        ← Conda 環境定義 (全ツールバージョン固定)
-├── setup_env.sh           ← 環境セットアップスクリプト
+├── environment.yml        ← Conda 環境定義 (Linux フルパイプライン用)
+├── setup_env.sh           ← Conda 環境セットアップスクリプト
+├── renv.lock              ← R パッケージバージョンロック (全OS共通)
+├── setup_renv.R           ← R 環境セットアップスクリプト
+├── .Rprofile              ← renv 自動アクティベート
+├── renv/                  ← renv 管理フォルダ (library/ は gitignore)
 ├── config.sh              ← 【唯一の設定ファイル】実験ごとにここだけ編集
 ├── samples.tsv            ← サンプル名とグループの対応表
 ├── init_project.sh        ← プロジェクト初期化スクリプト
