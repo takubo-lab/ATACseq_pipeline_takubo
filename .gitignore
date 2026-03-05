@@ -35,6 +35,10 @@ HOMER_*/
 .pipeline.lock
 provenance.yml
 
+# Conda
+.conda/
+*.conda
+
 # System files
 .DS_Store
 Thumbs.db

@@ -97,6 +97,23 @@ done
 # --- ユーティリティ読み込み ---
 source "${PIPELINE_ROOT}/scripts/utils.sh"
 
+# --- Conda 環境チェック ---
+EXPECTED_ENV="atacseq_takubo"
+current_env="${CONDA_DEFAULT_ENV:-}"
+if [[ "${current_env}" != "${EXPECTED_ENV}" ]]; then
+  echo -e "\033[1;33m[WARN]\033[0m Conda環境 '${EXPECTED_ENV}' がアクティブではありません。"
+  echo -e "       現在の環境: '${current_env:-none}'"
+  echo ""
+  echo "  セットアップ:   bash setup_env.sh"
+  echo "  アクティベート: conda activate ${EXPECTED_ENV}"
+  echo ""
+  read -rp "このまま続行しますか？ [y/N]: " yn
+  case "${yn}" in
+    [Yy]*) echo "[INFO] 現在の環境で続行します。" ;;
+    *)     echo "[INFO] 中断しました。"; exit 1 ;;
+  esac
+fi
+
 # --- 設定読み込み ---
 if [[ -n "$CONFIG_FILE" ]]; then
   if [[ ! -f "$CONFIG_FILE" ]]; then
