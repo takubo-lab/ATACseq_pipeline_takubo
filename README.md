@@ -179,12 +179,15 @@ ATACseq_pipeline_takubo/
 ├── setup_renv.R           ← R 環境セットアップスクリプト
 ├── .Rprofile              ← renv 自動アクティベート
 ├── renv/                  ← renv 管理フォルダ (library/ は gitignore)
+├── plot_config.default.yml ← 可視化設定テンプレート (Git管理)
+├── plot_config.yml        ← 個人カスタマイズ (Git非管理, .gitignore)
 ├── config.sh              ← 【唯一の設定ファイル】実験ごとにここだけ編集
 ├── samples.tsv            ← サンプル名とグループの対応表
 ├── init_project.sh        ← プロジェクト初期化スクリプト
 ├── run_pipeline.sh        ← パイプライン実行スクリプト
 ├── scripts/
 │   ├── utils.sh                # ユーティリティ関数 (バージョン・provenance・ロック)
+│   ├── plot_utils.R            # 可視化設定読み込みユーティリティ
 │   ├── 01_mapping.sh           # Step 1: trim_galore → bowtie2 → picard
 │   ├── 02_peakcall.sh          # Step 2: MACS3 → 250bp 固定長ピーク
 │   ├── 03_peak_counts.R        # Step 3: csaw カウント → 閾値フィルタ
@@ -492,6 +495,72 @@ PEAK_LOGCPM_THRESHOLD="auto"  # 自動検出 (確認省略したい場合)
 | `Plots/PCA_PC1_PC2.png` 等 | PCA・相関ヒートマップ・Venn 図 |
 | `logs/pipeline_{timestamp}.log` | 実行ログ |
 | `provenance.yml` | 実行記録 (パイプラインバージョン・ソフトウェア情報) |
+
+## 可視化のカスタマイズ（個人設定）
+
+パイプラインの解析ロジック（Git管理）と、図の見た目（個人管理）を分離しています。
+
+| ファイル | Git管理 | 用途 |
+|----------|---------|------|
+| `plot_config.default.yml` | ✓ 管理 | デフォルト設定（全員共通） |
+| `plot_config.yml` | ✗ 無視 | 個人カスタマイズ |
+| `scripts/plot_utils.R` | ✓ 管理 | 設定読み込みユーティリティ |
+
+### カスタマイズ手順
+
+```bash
+# テンプレートをコピー（初回のみ）
+cp plot_config.default.yml plot_config.yml
+
+# 好みに合わせて編集
+vim plot_config.yml   # or RStudio で編集
+```
+
+### 設定例
+
+```yaml
+# 図のテーマを変更
+theme:
+  base_size: 14
+  ggplot_theme: "theme_classic"
+
+# 出力をPDFに変更
+output:
+  format: "pdf"
+
+# グループに特定の色を割り当て
+colors:
+  group_colors:
+    WT: "#4DBBD5"
+    KO: "#E64B35"
+
+# PCA の点を大きく
+pca:
+  point_size: 6
+```
+
+### Rスクリプト内での使用
+
+```r
+source("scripts/plot_utils.R")
+cfg <- load_plot_config()
+
+# 統一テーマ適用
+p <- ggplot(df, aes(x, y, color = group)) +
+  geom_point(size = cfg$pca$point_size) +
+  theme_pipeline(cfg)
+
+# グループ色を取得
+cols <- get_group_colors(unique(df$group), cfg)
+p <- p + scale_color_manual(values = cols)
+
+# 図を保存（サイズ・形式は設定ファイルに従う）
+save_plot(p, "PCA_result", type = "pca", outdir = "results/", cfg = cfg)
+```
+
+> **ポイント**: `plot_config.yml` は `.gitignore` に含まれるため、個人の変更がリポジトリに反映されることはありません。デフォルト設定を変更したい場合は `plot_config.default.yml` を編集してコミットしてください。
+
+---
 
 ## 対応ゲノム
 
