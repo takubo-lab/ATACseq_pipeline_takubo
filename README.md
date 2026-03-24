@@ -423,7 +423,7 @@ PEAK_LOGCPM_THRESHOLD="auto"  # 自動検出 (確認省略したい場合)
 
 | パラメータ | ATAC-seq | CUT&Tag | CUT&RUN |
 |---|---|---|---|
-| `MACS3_FORMAT` | `BAM` | `BAM` | `BAMPE` |
+| `MACS3_FORMAT` | `BAM` | `BAMPE` | `BAMPE` |
 | `MACS3_NOMODEL` | `true` | `false` | `true` |
 | `MACS3_EXTSIZE` | `100` | `""` (省略) | `""` (省略) |
 | `MACS3_SHIFT` | `-50` | `""` (省略) | `""` (省略) |
@@ -450,7 +450,7 @@ BOWTIE2_MAX_INSERT=700
 MAPQ_FILTER=0
 TRIM_QUALITY=20
 TRIM_MIN_LENGTH=""
-MACS3_FORMAT="BAM"
+MACS3_FORMAT="BAMPE"
 MACS3_NOMODEL="false"
 MACS3_EXTSIZE=""
 MACS3_SHIFT=""
@@ -503,7 +503,7 @@ SUMMIT_HALFWIDTH=500
 | 変数 | 説明 | デフォルト (ATAC) |
 |---|---|---|
 | `MACS3_PVALUE` | MACS3 p-value カットオフ | `0.01` |
-| `MACS3_FORMAT` | `-f` オプション (`BAM`=ATAC/CUT&Tag, `BAMPE`=CUT&RUN) | `BAM` |
+| `MACS3_FORMAT` | `-f` オプション (`BAM`=ATAC, `BAMPE`=CUT&Tag/CUT&RUN) | `BAM` |
 | `MACS3_NOMODEL` | `--nomodel` を使用 (ATAC/CUT&RUN=`true`, CUT&Tag=`false`) | `true` |
 | `MACS3_EXTSIZE` | `--extsize` (ATACは`100`, CUT&Tag/CUT&RUNは`""`) | `100` |
 | `MACS3_SHIFT` | `--shift` (ATACは`-50`, CUT&Tag/CUT&RUNは`""`) | `-50` |

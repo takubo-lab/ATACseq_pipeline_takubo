@@ -64,7 +64,7 @@ MAX_RAM_RECORDS=2500000   # picard MAX_RECORDS_IN_RAM (≈ RAM(MB) / 4 を目安
 #  │              │  -X    │ MAPQ  │ Trim品質/長さ        │  -f    │ nomodel │ extsize │ shift │ Peak幅  │
 #  ├──────────────┼────────┼───────┼─────────────────────┼────────┼─────────┼─────────┼───────┼─────────┤
 #  │ ATAC-seq     │  700   │  -    │ デフォルト           │  BAM   │  true   │   100   │  -50  │  125bp  │
-#  │ CUT&Tag      │  700   │  -    │ デフォルト           │  BAM   │  false  │    -    │   -   │  500bp  │
+#  │ CUT&Tag      │  700   │  -    │ デフォルト           │  BAMPE │  false  │    -    │   -   │  500bp  │
 #  │ CUT&RUN      │ 1000   │  30   │ --quality 30 -L 15  │  BAMPE │  true   │    -    │   -   │  125bp  │
 #  └──────────────┴────────┴───────┴─────────────────────┴────────┴─────────┴─────────┴───────┴─────────┘
 #
@@ -102,7 +102,7 @@ NFR_MAXFRAG=200
 # --- MACS3 オプション ---
 #                    ATAC     CUT&Tag   CUT&RUN
 MACS3_PVALUE="0.01"          # p-value カットオフ
-MACS3_FORMAT="BAM"           # -f : BAM (ATAC/CUT&Tag) / BAMPE (CUT&RUN)
+MACS3_FORMAT="BAM"           # -f : BAM (ATAC) / BAMPE (CUT&Tag/CUT&RUN)
 MACS3_NOMODEL="true"         # --nomodel : ATAC=true / CUT&Tag=false / CUT&RUN=true
 MACS3_EXTSIZE="100"          # --extsize : ATAC=100 / CUT&Tag="" / CUT&RUN=""  (空=省略)
 MACS3_SHIFT="-50"            # --shift   : ATAC=-50 / CUT&Tag="" / CUT&RUN=""  (空=省略)
