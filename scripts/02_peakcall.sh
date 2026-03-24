@@ -58,19 +58,15 @@ if should_run_sub a; then
   if [[ "${FORCE}" != "true" && -f "${SUMMIT_FILE}" ]]; then
     echo "[a] Summit file already exists, skipping MACS3 (use --force to redo)"
   else
-    echo "[a] Running MACS3 callpeak (format=${MACS3_FORMAT}, p=${MACS3_PVALUE})..."
-    if [[ "${MACS3_FORMAT}" == "BAMPE" ]]; then
-      macs3 callpeak -f BAMPE -t "${BAM_FILES[@]}" \
-        -p "${MACS3_PVALUE}" -g "${GENOME_SIZE_MACS}" --keep-dup all \
-        --outdir "${AGG_DIR}" -n aggregated_narrow \
-        2>&1 | tee "${AGG_DIR}/macs3.log"
-    else
-      macs3 callpeak -f BAM -t "${BAM_FILES[@]}" \
-        -p "${MACS3_PVALUE}" -g "${GENOME_SIZE_MACS}" --keep-dup all \
-        --nomodel --shift -50 --extsize 100 \
-        --outdir "${AGG_DIR}" -n aggregated_narrow \
-        2>&1 | tee "${AGG_DIR}/macs3.log"
-    fi
+    echo "[a] Running MACS3 callpeak (format=${MACS3_FORMAT}, nomodel=${MACS3_NOMODEL:-false}, p=${MACS3_PVALUE})..."
+    MACS3_OPTS=(-f "${MACS3_FORMAT}" -p "${MACS3_PVALUE}" -g "${GENOME_SIZE_MACS}" --keep-dup all)
+    [[ "${MACS3_NOMODEL:-false}" == "true" ]] && MACS3_OPTS+=(--nomodel)
+    [[ -n "${MACS3_EXTSIZE:-}" ]]             && MACS3_OPTS+=(--extsize "${MACS3_EXTSIZE}")
+    [[ -n "${MACS3_SHIFT:-}" ]]               && MACS3_OPTS+=(--shift   "${MACS3_SHIFT}")
+    macs3 callpeak "${MACS3_OPTS[@]}" \
+      -t "${BAM_FILES[@]}" \
+      --outdir "${AGG_DIR}" -n aggregated_narrow \
+      2>&1 | tee "${AGG_DIR}/macs3.log"
   fi
   echo "  Raw peaks called: $(wc -l < "${AGG_DIR}/aggregated_narrow_peaks.narrowPeak")"
 fi

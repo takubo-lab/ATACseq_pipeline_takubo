@@ -54,9 +54,40 @@ THREADS=6
 MAX_RAM_RECORDS=2500000   # picard MAX_RECORDS_IN_RAM (≈ RAM(MB) / 4 を目安)
 
 # =============================================================================
+#  ASSAY TYPE — アッセイタイプ別パラメータ対応表
+#
+#  このパイプラインは ATAC-seq / CUT&Tag / CUT&RUN に対応しています。
+#  下記の対応表を参照し、使用するアッセイに合わせて各パラメータを設定してください。
+#
+#  ┌──────────────┬──────────────────────────────────────┬──────────────────────────────────────────────┐
+#  │              │  Bowtie2 / Trimming                  │  MACS3                                       │
+#  │              │  -X    │ MAPQ  │ Trim品質/長さ        │  -f    │ nomodel │ extsize │ shift │ Peak幅  │
+#  ├──────────────┼────────┼───────┼─────────────────────┼────────┼─────────┼─────────┼───────┼─────────┤
+#  │ ATAC-seq     │  700   │  -    │ デフォルト           │  BAM   │  true   │   100   │  -50  │  125bp  │
+#  │ CUT&Tag      │  700   │  -    │ デフォルト           │  BAM   │  false  │    -    │   -   │  500bp  │
+#  │ CUT&RUN      │ 1000   │  30   │ --quality 30 -L 15  │  BAMPE │  true   │    -    │   -   │  125bp  │
+#  └──────────────┴────────┴───────┴─────────────────────┴────────┴─────────┴─────────┴───────┴─────────┘
+#
+ASSAY_TYPE="ATAC"   # 参考ラベル (ATAC / CUT_AND_TAG / CUT_AND_RUN)
+                    # ※ 実際の動作は下記の個別パラメータで決まります
+
+# =============================================================================
 #  STEP 1 — MAPPING (trim_galore / bowtie2 / picard)
 # =============================================================================
-BOWTIE2_MAX_INSERT=700    # bowtie2 最大 insert size (NFR のみ解析する場合は 200)
+
+# --- Bowtie2 ---
+# ATAC / CUT&Tag : 700   CUT&RUN : 1000
+BOWTIE2_MAX_INSERT=700    # bowtie2 -X (最大 insert size, bp)
+
+# samtools MAPQ フィルタ (0 = フィルタなし)
+# ATAC / CUT&Tag : 0     CUT&RUN : 30
+MAPQ_FILTER=0
+
+# --- trim_galore 追加オプション ---
+# ATAC / CUT&Tag : デフォルト (TRIM_QUALITY=20, TRIM_MIN_LENGTH は省略)
+# CUT&RUN        : TRIM_QUALITY=30  TRIM_MIN_LENGTH=15
+TRIM_QUALITY=20           # trim_galore --quality
+TRIM_MIN_LENGTH=""        # trim_galore --length (空 = デフォルト、適用しない)
 
 # Nucleosome-free region (NFR) フィルタ
 # true: フラグメント長 < NFR_MAXFRAG のリードのみ使用 (NFR解析)
@@ -67,11 +98,18 @@ NFR_MAXFRAG=200
 # =============================================================================
 #  STEP 2 — PEAK CALLING (MACS3)
 # =============================================================================
-MACS3_PVALUE="0.01"       # p-value カットオフ
-MACS3_FORMAT="BAMPE"      # BAMPE=ペアエンド推奨 / BAM=シングルエンド互換
+
+# --- MACS3 オプション ---
+#                    ATAC     CUT&Tag   CUT&RUN
+MACS3_PVALUE="0.01"          # p-value カットオフ
+MACS3_FORMAT="BAM"           # -f : BAM (ATAC/CUT&Tag) / BAMPE (CUT&RUN)
+MACS3_NOMODEL="true"         # --nomodel : ATAC=true / CUT&Tag=false / CUT&RUN=true
+MACS3_EXTSIZE="100"          # --extsize : ATAC=100 / CUT&Tag="" / CUT&RUN=""  (空=省略)
+MACS3_SHIFT="-50"            # --shift   : ATAC=-50 / CUT&Tag="" / CUT&RUN=""  (空=省略)
 
 # サミットを中心とした固定長ピークウィンドウの half-width (bp)
-# 最終ピーク幅 = SUMMIT_HALFWIDTH × 2 (デフォルト 125 → 250 bp)
+# 最終ピーク幅 = SUMMIT_HALFWIDTH × 2
+# ATAC / CUT&RUN : 125 (→ 250bp)   CUT&Tag (H3K27ac/H3K9ac) : 500 (→ 1000bp)
 SUMMIT_HALFWIDTH=125
 
 # =============================================================================

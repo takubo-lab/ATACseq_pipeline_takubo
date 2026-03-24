@@ -25,16 +25,16 @@ dependencies:
   - homer=4.11
 
   # --- R and packages ---
-  - r-base=4.3.3
-  - bioconductor-genomicranges=1.54.1
-  - bioconductor-csaw=1.36.0
-  - bioconductor-edger=4.0.16
-  - bioconductor-biocparallel=1.36.0
+  - r-base=4.5.2
+  - bioconductor-genomicranges=1.62.1
+  - bioconductor-csaw=1.44.0
+  - bioconductor-edger=4.8.2
+  - bioconductor-biocparallel=1.44.0
   - r-tidyverse=2.0.0
-  - r-data.table=1.15.4
-  - r-ggplot2=3.5.1
-  - r-pheatmap=1.0.12
-  - r-ggrepel=0.9.5
+  - r-data.table=1.17.8
+  - r-ggplot2=4.0.1
+  - r-pheatmap=1.0.13
+  - r-ggrepel=0.9.6
   - r-ggvenn=0.1.10
 
   # --- Utilities ---

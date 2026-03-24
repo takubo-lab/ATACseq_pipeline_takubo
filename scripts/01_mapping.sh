@@ -113,7 +113,9 @@ while IFS=$'\t' read -r sample _group; do
         echo "  Trimmed exists, skipping: $(basename "$r1")"
       else
         echo "  Trimming: $(basename "$r1") + $(basename "$r2")"
-        trim_galore --paired -o "${DIR}/${DIR_TRIMMED}/" -j 4 "$r1" "$r2"
+        TRIM_OPTS=(--paired -o "${DIR}/${DIR_TRIMMED}/" -j 4 --quality "${TRIM_QUALITY}")
+        [[ -n "${TRIM_MIN_LENGTH:-}" ]] && TRIM_OPTS+=(--length "${TRIM_MIN_LENGTH}")
+        trim_galore "${TRIM_OPTS[@]}" "$r1" "$r2"
       fi
     done
   fi
@@ -148,12 +150,14 @@ while IFS=$'\t' read -r sample _group; do
 
       echo "  Filtering reads (standard chromosomes, proper pairs)..."
       FILT_BAM="${DIR}/${DIR_BAM}/${sample}.noMT.filt.bam"
+      MAPQ_OPT=()
+      [[ "${MAPQ_FILTER:-0}" -gt 0 ]] && MAPQ_OPT=(-q "${MAPQ_FILTER}")
       if [[ "${FILTER_NFR}" == "true" ]]; then
-        samtools view -@ "${THREADS}" -b -f 3 "${RAW_SAM}" "${STANDARD_CHR[@]}" | \
+        samtools view -@ "${THREADS}" -b -f 3 "${MAPQ_OPT[@]}" "${RAW_SAM}" "${STANDARD_CHR[@]}" | \
           samtools view -b -@ "${THREADS}" -e "tlen >= 10 && tlen <= ${NFR_MAXFRAG}" \
           > "${FILT_BAM}"
       else
-        samtools view -@ "${THREADS}" -b -f 3 "${RAW_SAM}" "${STANDARD_CHR[@]}" \
+        samtools view -@ "${THREADS}" -b -f 3 "${MAPQ_OPT[@]}" "${RAW_SAM}" "${STANDARD_CHR[@]}" \
           > "${FILT_BAM}"
       fi
       FILT_SORTED="${DIR}/${DIR_BAM}/${sample}.noMT.filt.sorted.bam"
