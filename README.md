@@ -345,7 +345,7 @@ MACS3_ENV="$HOME/venvs/venv_macs3/bin/activate"
 | `1a` | trim_galore アダプタートリミング |
 | `1b` | bowtie2 アライメント + samtools フィルタ (proper-pair / 標準染色体) |
 | `1c` | picard MarkDuplicates (重複除去) |
-| `2a` | MACS3 callpeak (全サンプル統合、BAMPE モード) |
+| `2a` | MACS3 callpeak (全サンプル統合、`MACS3_FORMAT`/`MACS3_NOMODEL` に従う) |
 | `2b` | サミット → blacklist 除去 → 250 bp 固定長ピーク |
 | `3a` | csaw カウント + aveLogCPM ヒストグラム出力 ※未設定時は一時停止 |
 | `3b` | 閾値フィルタ → ピーク BED / カウント行列出力 |
@@ -405,6 +405,60 @@ PEAK_LOGCPM_THRESHOLD="auto"  # 自動検出 (確認省略したい場合)
 
 ---
 
+## アッセイタイプ別パラメータ設定
+
+このパイプラインは ATAC-seq / CUT&Tag / CUT&RUN に対応しています。
+`config.sh` で下記の対応表に従って各パラメータを設定してください。
+
+### Bowtie2 / Trimming 設定
+
+| パラメータ | ATAC-seq | CUT&Tag | CUT&RUN |
+|---|---|---|---|
+| `BOWTIE2_MAX_INSERT` | `700` | `700` | `1000` |
+| `MAPQ_FILTER` | `0` (フィルタなし) | `0` (フィルタなし) | `30` |
+| `TRIM_QUALITY` | `20` | `20` | `30` |
+| `TRIM_MIN_LENGTH` | `""` (省略) | `""` (省略) | `15` |
+
+### MACS3 設定
+
+| パラメータ | ATAC-seq | CUT&Tag | CUT&RUN |
+|---|---|---|---|
+| `MACS3_FORMAT` | `BAM` | `BAM` | `BAMPE` |
+| `MACS3_NOMODEL` | `true` | `false` | `true` |
+| `MACS3_EXTSIZE` | `100` | `""` (省略) | `""` (省略) |
+| `MACS3_SHIFT` | `-50` | `""` (省略) | `""` (省略) |
+| `SUMMIT_HALFWIDTH` | `125` (→250bp) | `500` (→1000bp) | `125` (→250bp) |
+
+**設定例 (CUT&RUN の場合):**
+```bash
+ASSAY_TYPE="CUT_AND_RUN"
+BOWTIE2_MAX_INSERT=1000
+MAPQ_FILTER=30
+TRIM_QUALITY=30
+TRIM_MIN_LENGTH=15
+MACS3_FORMAT="BAMPE"
+MACS3_NOMODEL="true"
+MACS3_EXTSIZE=""
+MACS3_SHIFT=""
+SUMMIT_HALFWIDTH=125
+```
+
+**設定例 (CUT&Tag の場合):**
+```bash
+ASSAY_TYPE="CUT_AND_TAG"
+BOWTIE2_MAX_INSERT=700
+MAPQ_FILTER=0
+TRIM_QUALITY=20
+TRIM_MIN_LENGTH=""
+MACS3_FORMAT="BAM"
+MACS3_NOMODEL="false"
+MACS3_EXTSIZE=""
+MACS3_SHIFT=""
+SUMMIT_HALFWIDTH=500
+```
+
+---
+
 ## `config.sh` パラメータ一覧
 
 ### ゲノム設定
@@ -435,18 +489,24 @@ PEAK_LOGCPM_THRESHOLD="auto"  # 自動検出 (確認省略したい場合)
 
 ### Step 1: マッピング
 
-| 変数 | 説明 | デフォルト |
+| 変数 | 説明 | デフォルト (ATAC) |
 |---|---|---|
 | `BOWTIE2_MAX_INSERT` | bowtie2 最大 insert size (bp) | `700` |
+| `MAPQ_FILTER` | samtools MAPQ フィルタ (`0`=なし, CUT&RUNは`30`) | `0` |
+| `TRIM_QUALITY` | trim_galore `--quality` | `20` |
+| `TRIM_MIN_LENGTH` | trim_galore `--length` (空=省略, CUT&RUNは`15`) | `""` |
 | `FILTER_NFR` | NFR フィルタ (`true`/`false`) | `false` |
 | `NFR_MAXFRAG` | NFR フィルタ時の最大フラグメント長 (bp) | `200` |
 
 ### Step 2: ピークコール
 
-| 変数 | 説明 | デフォルト |
+| 変数 | 説明 | デフォルト (ATAC) |
 |---|---|---|
 | `MACS3_PVALUE` | MACS3 p-value カットオフ | `0.01` |
-| `MACS3_FORMAT` | `BAMPE` (推奨) / `BAM` | `BAMPE` |
+| `MACS3_FORMAT` | `-f` オプション (`BAM`=ATAC/CUT&Tag, `BAMPE`=CUT&RUN) | `BAM` |
+| `MACS3_NOMODEL` | `--nomodel` を使用 (ATAC/CUT&RUN=`true`, CUT&Tag=`false`) | `true` |
+| `MACS3_EXTSIZE` | `--extsize` (ATACは`100`, CUT&Tag/CUT&RUNは`""`) | `100` |
+| `MACS3_SHIFT` | `--shift` (ATACは`-50`, CUT&Tag/CUT&RUNは`""`) | `-50` |
 | `SUMMIT_HALFWIDTH` | 固定長ピークの半幅 (bp)。最終ピーク = ×2 | `125` (250bp) |
 
 ### Step 3: ピークカウント
