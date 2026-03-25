@@ -440,8 +440,41 @@ MACS3_FORMAT="BAMPE"
 MACS3_NOMODEL="true"
 MACS3_EXTSIZE=""
 MACS3_SHIFT=""
+MACS3_CONTROL_BAMS=(
+  "/path/to/IgG_rep1.bam"
+  "/path/to/IgG_rep2.bam"
+)
 SUMMIT_HALFWIDTH=125
 ```
+
+### CUT&RUN のバックグラウンド BAM 指定
+
+Step 2 のピークコールは treatment 側を全サンプル aggregate して 1 回だけ MACS3 を実行します。そのため、control 側も同じ粒度で 1 つにそろえて使う前提です。
+
+`config.sh` で `MACS3_CONTROL_BAMS` に 0 本、1 本、複数本の BAM を指定できます。
+
+```bash
+# control なし
+MACS3_CONTROL_BAMS=()
+
+# control 1本
+MACS3_CONTROL_BAMS=(
+  "/path/to/IgG_merged.bam"
+)
+
+# control 複数本
+MACS3_CONTROL_BAMS=(
+  "/path/to/IgG_rep1.bam"
+  "/path/to/IgG_rep2.bam"
+  "/path/to/IgG_rep3.bam"
+)
+```
+
+- 1 本指定: その BAM をそのまま `macs3 callpeak -c` に渡します。
+- 複数本指定: Step 2 で `Peak_nomodel/aggregated/aggregated_control.bam` に merge して index を作成し、その merged BAM を `-c` に渡します。
+- 未指定: control なしで peak call します。
+
+条件ごとに別々の background がある場合でも、このパイプラインでは treatment を pooled peak call しているため、background も pooled control としてまとめて使う設計です。条件ごとの matched control を厳密に使い分けたい場合は、条件ごとに peak call して後で union peak を作る別設計が必要です。
 
 **設定例 (CUT&Tag の場合):**
 ```bash
@@ -507,6 +540,7 @@ SUMMIT_HALFWIDTH=500
 | `MACS3_NOMODEL` | `--nomodel` を使用 (ATAC/CUT&Tag/CUT&RUN いずれも `true`) | `true` |
 | `MACS3_EXTSIZE` | `--extsize` (ATACは`100`, CUT&Tag/CUT&RUNは`""`) | `100` |
 | `MACS3_SHIFT` | `--shift` (ATACは`-50`, CUT&Tag/CUT&RUNは`""`) | `-50` |
+| `MACS3_CONTROL_BAMS` | MACS3 control 用 BAM 配列。複数指定時は Step 2 で merge してから使用 | `()` |
 | `SUMMIT_HALFWIDTH` | 固定長ピークの半幅 (bp)。最終ピーク = ×2 | `125` (250bp) |
 
 ### Step 3: ピークカウント

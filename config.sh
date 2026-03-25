@@ -107,6 +107,15 @@ MACS3_NOMODEL="true"         # --nomodel : ATAC=true / CUT&Tag=true / CUT&RUN=tr
 MACS3_EXTSIZE="100"          # --extsize : ATAC=100 / CUT&Tag="" / CUT&RUN=""  (空=省略)
 MACS3_SHIFT="-50"            # --shift   : ATAC=-50 / CUT&Tag="" / CUT&RUN=""  (空=省略)
 
+# CUT&RUN などでバックグラウンド BAM を使う場合に指定
+# 例:
+#   MACS3_CONTROL_BAMS=(
+#     "${DIR}/controls/IgG_rep1.bam"
+#     "${DIR}/controls/IgG_rep2.bam"
+#   )
+# 空配列なら control なしで実行
+MACS3_CONTROL_BAMS=()
+
 # サミットを中心とした固定長ピークウィンドウの half-width (bp)
 # 最終ピーク幅 = SUMMIT_HALFWIDTH × 2
 # ATAC / CUT&RUN : 125 (→ 250bp)   CUT&Tag (H3K27ac/H3K9ac) : 500 (→ 1000bp)

@@ -119,6 +119,7 @@ parameters:
   filter_nfr: "${FILTER_NFR}"
   macs3_pvalue: "${MACS3_PVALUE}"
   macs3_format: "${MACS3_FORMAT}"
+  macs3_control_bams: "${MACS3_CONTROL_BAMS[*]:-}"
   summit_halfwidth: ${SUMMIT_HALFWIDTH}
   peak_logcpm_threshold: "${PEAK_LOGCPM_THRESHOLD}"
   binsize: ${BINSIZE}
