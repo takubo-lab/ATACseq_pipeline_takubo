@@ -15,7 +15,8 @@
 #        BAM/{sample}_picard_metrics.txt
 # =============================================================================
 set -euo pipefail
-source "$(dirname "$0")/../config.sh"
+_cfg="${PIPELINE_CONFIG_FILE:-$(dirname "$0")/../config.sh}"
+source "${_cfg}"
 
 # --- Substep control ---
 # FROM_SUB: ""/"a"=trim+align+dedup  "b"=align+dedup  "c"=deduponly
@@ -137,7 +138,7 @@ while IFS=$'\t' read -r sample _group; do
       echo "[b] Aligning with bowtie2 (${#trim_r1_files[@]} lane(s))..."
       R1_ARG=$(printf ',%s' "${trim_r1_files[@]}"); R1_ARG="${R1_ARG:1}"
       R2_ARG=$(printf ',%s' "${trim_r2_files[@]}"); R2_ARG="${R2_ARG:1}"
-      RAW_SAM="${DIR}/${DIR_BAM}/${sample}.sam"
+      RAW_BAM="${DIR}/${DIR_BAM}/${sample}.raw.bam"
       bowtie2 \
         --very-sensitive \
         -1 "${R1_ARG}" -2 "${R2_ARG}" \
@@ -145,25 +146,27 @@ while IFS=$'\t' read -r sample _group; do
         -I 10 -X "${BOWTIE2_MAX_INSERT}" \
         -x "${BOWTIE2_INDEX}" \
         -p "${THREADS}" \
-        --met-file "${DIR}/${DIR_BAM}/${sample}_bowtie2.log" \
-        -S "${RAW_SAM}"
+        --rg-id "${sample}" --rg "SM:${sample}" --rg "PL:ILLUMINA" --rg "LB:${sample}" \
+        --met-file "${DIR}/${DIR_BAM}/${sample}_bowtie2.log" | \
+        samtools sort -@ "${THREADS}" -o "${RAW_BAM}"
+      samtools index -@ "${THREADS}" "${RAW_BAM}"
 
       echo "  Filtering reads (standard chromosomes, proper pairs)..."
       FILT_BAM="${DIR}/${DIR_BAM}/${sample}.noMT.filt.bam"
       MAPQ_OPT=()
       [[ "${MAPQ_FILTER:-0}" -gt 0 ]] && MAPQ_OPT=(-q "${MAPQ_FILTER}")
       if [[ "${FILTER_NFR}" == "true" ]]; then
-        samtools view -@ "${THREADS}" -b -f 3 "${MAPQ_OPT[@]}" "${RAW_SAM}" "${STANDARD_CHR[@]}" | \
+        samtools view -@ "${THREADS}" -b -f 3 "${MAPQ_OPT[@]}" "${RAW_BAM}" "${STANDARD_CHR[@]}" | \
           samtools view -b -@ "${THREADS}" -e "tlen >= 10 && tlen <= ${NFR_MAXFRAG}" \
           > "${FILT_BAM}"
       else
-        samtools view -@ "${THREADS}" -b -f 3 "${MAPQ_OPT[@]}" "${RAW_SAM}" "${STANDARD_CHR[@]}" \
+        samtools view -@ "${THREADS}" -b -f 3 "${MAPQ_OPT[@]}" "${RAW_BAM}" "${STANDARD_CHR[@]}" \
           > "${FILT_BAM}"
       fi
       FILT_SORTED="${DIR}/${DIR_BAM}/${sample}.noMT.filt.sorted.bam"
       samtools sort -@ "${THREADS}" -o "${FILT_SORTED}" "${FILT_BAM}"
       samtools index -@ "${THREADS}" "${FILT_SORTED}"
-      rm -f "${FILT_BAM}" "${RAW_SAM}"
+      rm -f "${FILT_BAM}" "${RAW_BAM}" "${RAW_BAM}.bai"
     fi
   fi
 

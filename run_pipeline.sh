@@ -120,6 +120,7 @@ if [[ -n "$CONFIG_FILE" ]]; then
     echo "ERROR: Config file not found: ${CONFIG_FILE}"
     exit 1
   fi
+  export PIPELINE_CONFIG_FILE="$CONFIG_FILE"
   source "$CONFIG_FILE"
 else
   source "${PIPELINE_ROOT}/config.sh"
@@ -200,7 +201,7 @@ echo "--- Checking required tools ---"
 for tool in trim_galore bowtie2 samtools bedtools; do
   check_tool "$tool"
 done
-java -jar "${PICARD_JAR}" --version &>/dev/null || { echo "ERROR: picard.jar not found at ${PICARD_JAR}"; exit 1; }
+[[ -f "${PICARD_JAR}" ]] || { echo "ERROR: picard.jar not found at ${PICARD_JAR}"; exit 1; }
 echo "  Required tools: OK"
 
 # --- 環境アクティベート ---

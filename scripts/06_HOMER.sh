@@ -19,7 +19,8 @@
 #    {G1}_vs_{G2}_down_FDR{FDR}.bed
 # =============================================================================
 set -euo pipefail
-source "$(dirname "$0")/../config.sh"
+_cfg="${PIPELINE_CONFIG_FILE:-$(dirname "$0")/../config.sh}"
+source "${_cfg}"
 
 PEAK_DIR="${DIR}/${DIR_PEAKS}"
 EDGE_DIR="${PEAK_DIR}/edgeR"
@@ -37,6 +38,16 @@ fi
 # HOMER の確認
 if ! command -v findMotifsGenome.pl &>/dev/null; then
   echo "ERROR: findMotifsGenome.pl not found. Please install HOMER and add to PATH."
+  echo "       See: http://homer.ucsd.edu/homer/introduction/install.html"
+  exit 1
+fi
+
+# HOMER ゲノムのインストール確認
+_homer_bin="$(dirname "$(command -v findMotifsGenome.pl)")"
+_homer_genome_dir="${_homer_bin}/../data/genomes/${HOMER_GENOME}"
+if [[ ! -d "${_homer_genome_dir}" ]]; then
+  echo "ERROR: HOMER genome '${HOMER_GENOME}' is not installed."
+  echo "       Install with: perl ${_homer_bin}/configureHomer.pl install ${HOMER_GENOME}"
   exit 1
 fi
 

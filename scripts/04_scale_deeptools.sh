@@ -17,7 +17,8 @@
 #    bw_for_deeptools/{group}.bw
 # =============================================================================
 set -euo pipefail
-source "$(dirname "$0")/../config.sh"
+_cfg="${PIPELINE_CONFIG_FILE:-$(dirname "$0")/../config.sh}"
+source "${_cfg}"
 
 # --- Substep support ---
 FROM_SUB="${PIPELINE_FROM_SUBSTEP:-}"
