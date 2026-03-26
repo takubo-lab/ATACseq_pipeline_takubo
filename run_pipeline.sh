@@ -202,6 +202,23 @@ for tool in trim_galore bowtie2 samtools bedtools; do
   check_tool "$tool"
 done
 [[ -f "${PICARD_JAR}" ]] || { echo "ERROR: picard.jar not found at ${PICARD_JAR}"; exit 1; }
+
+# HOMER チェック (Step 6 を実行する場合のみ)
+if should_run 6; then
+  if ! command -v findMotifsGenome.pl &>/dev/null; then
+    echo "ERROR: findMotifsGenome.pl not found. Please install HOMER and add to PATH."
+    echo "       See: http://homer.ucsd.edu/homer/introduction/install.html"
+    exit 1
+  fi
+  _homer_bin="$(dirname "$(command -v findMotifsGenome.pl)")"
+  _homer_genome_dir="${_homer_bin}/../data/genomes/${HOMER_GENOME}"
+  if [[ ! -d "${_homer_genome_dir}" ]]; then
+    echo "ERROR: HOMER genome '${HOMER_GENOME}' is not installed."
+    echo "       Install with: perl ${_homer_bin}/configureHomer.pl install ${HOMER_GENOME}"
+    exit 1
+  fi
+fi
+
 echo "  Required tools: OK"
 
 # --- 環境アクティベート ---
