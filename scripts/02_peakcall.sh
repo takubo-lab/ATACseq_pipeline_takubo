@@ -17,7 +17,8 @@
 #        Peak_nomodel/Peak_250bp_noBL.bed (250bp拡張ピーク, csaw入力)
 # =============================================================================
 set -euo pipefail
-source "$(dirname "$0")/../config.sh"
+_cfg="${PIPELINE_CONFIG_FILE:-$(dirname "$0")/../config.sh}"
+source "${_cfg}"
 
 # --- Substep control ---
 # FROM_SUB: ""/"a"=MACS3+summit  "b"=summit only
