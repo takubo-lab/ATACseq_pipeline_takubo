@@ -21,6 +21,7 @@
 set -euo pipefail
 _cfg="${PIPELINE_CONFIG_FILE:-$(dirname "$0")/../config.sh}"
 source "${_cfg}"
+FORCE="${PIPELINE_FORCE:-false}"
 
 PEAK_DIR="${DIR}/${DIR_PEAKS}"
 EDGE_DIR="${PEAK_DIR}/edgeR"
@@ -77,7 +78,7 @@ for tsv in "${tsv_files[@]}"; do
 
   # ---- up: G1 > G2 (logFC > HOMER_LFC, FDR < HOMER_FDR) ----
   UP_BED="${HOMER_DIR}/${base}_up_FDR${HOMER_FDR}.bed"
-  if [[ ! -s "${UP_BED}" ]]; then
+  if [[ "${FORCE}" == "true" || ! -s "${UP_BED}" ]]; then
     awk -v fdr="${HOMER_FDR}" -v lfc="${HOMER_LFC}" \
       'BEGIN{OFS="\t"; FS="\t"}
        NR==1{next}
@@ -91,7 +92,7 @@ for tsv in "${tsv_files[@]}"; do
 
   # ---- down: G1 < G2 (logFC < -HOMER_LFC, FDR < HOMER_FDR) ----
   DOWN_BED="${HOMER_DIR}/${base}_down_FDR${HOMER_FDR}.bed"
-  if [[ ! -s "${DOWN_BED}" ]]; then
+  if [[ "${FORCE}" == "true" || ! -s "${DOWN_BED}" ]]; then
     awk -v fdr="${HOMER_FDR}" -v lfc="${HOMER_LFC}" \
       'BEGIN{OFS="\t"; FS="\t"}
        NR==1{next}
@@ -105,8 +106,11 @@ for tsv in "${tsv_files[@]}"; do
 
   # ----- HOMER: up -----
   UP_OUT="${HOMER_DIR}/${base}_up_FDR${HOMER_FDR}"
-  if [[ "${N_UP}" -ge 10 && ! -f "${UP_OUT}/knownResults.html" ]]; then
+  if [[ "${N_UP}" -ge 10 && ( "${FORCE}" == "true" || ! -f "${UP_OUT}/knownResults.html" ) ]]; then
     echo "  Running HOMER (up)..."
+    if [[ "${FORCE}" == "true" ]]; then
+      rm -rf "${UP_OUT}"
+    fi
     findMotifsGenome.pl \
       "${UP_BED}" \
       "${HOMER_GENOME}" \
@@ -124,8 +128,11 @@ for tsv in "${tsv_files[@]}"; do
 
   # ----- HOMER: down -----
   DOWN_OUT="${HOMER_DIR}/${base}_down_FDR${HOMER_FDR}"
-  if [[ "${N_DOWN}" -ge 10 && ! -f "${DOWN_OUT}/knownResults.html" ]]; then
+  if [[ "${N_DOWN}" -ge 10 && ( "${FORCE}" == "true" || ! -f "${DOWN_OUT}/knownResults.html" ) ]]; then
     echo "  Running HOMER (down)..."
+    if [[ "${FORCE}" == "true" ]]; then
+      rm -rf "${DOWN_OUT}"
+    fi
     findMotifsGenome.pl \
       "${DOWN_BED}" \
       "${HOMER_GENOME}" \

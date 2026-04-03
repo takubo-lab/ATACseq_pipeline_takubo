@@ -23,7 +23,7 @@
 #  4a: グループごと BAM マージ + blacklist 除去
 #  4b: スケールファクター算出 (R)
 #  4c: bamCoverage → bigWig 生成
-#  5 : DAR 検出 (edgeR QL)
+#  5 : DAR 検出 (edgeR LRT)
 #  6 : HOMER モチーフ解析
 #  7 : PCA・可視化
 #
@@ -303,7 +303,7 @@ fi
 #  Step 5 – DAR Detection
 # =============================================================================
 if should_run 5; then
-  run_step 5 "DAR Detection (edgeR QL)" Rscript "${SCRIPT_DIR}/05_DAR_edgeR.R"
+  run_step 5 "DAR Detection (edgeR LRT)" Rscript "${SCRIPT_DIR}/05_DAR_edgeR.R"
 fi
 
 # =============================================================================

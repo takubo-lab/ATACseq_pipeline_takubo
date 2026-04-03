@@ -1,11 +1,11 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-#  Step 5: DAR Detection (edgeR quasi-likelihood)
+#  Step 5: DAR Detection (edgeR likelihood ratio test)
 #
 #  処理内容:
 #    - PeakCounts_th0.txt を読み込み
 #    - samples.tsv からグループ情報を取得
-#    - edgeR QL (glmQLFit / glmQLFTest) で全ペアワイズ比較
+#    - edgeR LRT (glmFit / glmLRT) で全ペアワイズ比較
 #    - 結果 TSV と Volcano plot を出力
 #
 #  環境変数:
@@ -62,7 +62,7 @@ message("Groups: ", paste(group_levels, collapse = " / "))
 message("Samples: ", paste(samples_df$sample_name, collapse = ", "))
 
 # =============================================================================
-#  edgeR QL 統計モデル作成
+#  edgeR LRT 統計モデル作成
 # =============================================================================
 design <- model.matrix(~ 0 + class)
 colnames(design) <- levels(class)
@@ -72,7 +72,7 @@ keep <- filterByExpr(y, group = class)
 y <- y[keep, , keep.lib.sizes = FALSE]
 y <- calcNormFactors(y)
 y <- estimateDisp(y, design)
-fit <- glmQLFit(y, design, robust = TRUE)
+fit <- glmFit(y, design)
 kept_rows <- rownames(y)
 
 message("Peaks after filterByExpr: ", length(kept_rows))
@@ -121,7 +121,7 @@ write_results <- function(tt, g1, g2) {
       aes(label = paste0(chr, ":", start, "-", end)),
       size = 2.5, max.overlaps = 8, segment.size = 0.2
     ) +
-    labs(title = paste0(g1, " vs ", g2, "  (QLF)"),
+    labs(title = paste0(g1, " vs ", g2, "  (LRT)"),
          subtitle = paste0("FDR<", dar_fdr, " & |logFC|>", dar_lfc,
                            ": up=", n_up, ", down=", n_down),
          x = paste0("log2FC (", g1, " / ", g2, ")"),
@@ -136,7 +136,7 @@ write_results <- function(tt, g1, g2) {
                   basename(tsv_file)))
 }
 
-message("Running pairwise QLF tests (", nrow(pairs), " pairs)...")
+message("Running pairwise LRT tests (", nrow(pairs), " pairs)...")
 for (i in seq_len(nrow(pairs))) {
   g1 <- pairs[i, 1]
   g2 <- pairs[i, 2]
@@ -145,8 +145,8 @@ for (i in seq_len(nrow(pairs))) {
   v[g1] <-  1
   v[g2] <- -1
 
-  qlf <- glmQLFTest(fit, contrast = v)
-  tt  <- topTags(qlf, n = Inf)$table
+  lrt <- glmLRT(fit, contrast = v)
+  tt  <- topTags(lrt, n = Inf)$table
   rownames(tt) <- kept_rows[match(rownames(tt), kept_rows)]
 
   write_results(tt, g1, g2)

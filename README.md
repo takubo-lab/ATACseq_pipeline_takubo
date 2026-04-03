@@ -11,7 +11,7 @@ Trim → Align → Peak Call → Peak Count → Scale/BigWig → DAR → HOMER �
 | 2 | `scripts/02_peakcall.sh` | MACS3 → 250bp 固定長ピーク |
 | 3 | `scripts/03_peak_counts.R` | csaw カウント → 閾値フィルタ |
 | 4 | `scripts/04_scale_deeptools.sh` | BAM マージ → scale factor → bigWig |
-| 5 | `scripts/05_DAR_edgeR.R` | DAR 検出 (edgeR QL) |
+| 5 | `scripts/05_DAR_edgeR.R` | DAR 検出 (edgeR LRT) |
 | 6 | `scripts/06_HOMER.sh` | HOMER モチーフ解析 |
 | 7 | `scripts/07_PCA_plots.R` | PCA・相関ヒートマップ・Venn 図 |
 
@@ -193,7 +193,7 @@ ATACseq_pipeline_takubo/
 │   ├── 03_peak_counts.R        # Step 3: csaw カウント → 閾値フィルタ
 │   ├── 04_scale_deeptools.sh   # Step 4: BAM マージ → scale factor → bigWig
 │   ├── 04a_scale_factor.R      #         (scale factor 計算 R スクリプト)
-│   ├── 05_DAR_edgeR.R          # Step 5: DAR 検出 (edgeR QL)
+│   ├── 05_DAR_edgeR.R          # Step 5: DAR 検出 (edgeR LRT)
 │   ├── 06_HOMER.sh             # Step 6: HOMER モチーフ解析
 │   └── 07_PCA_plots.R          # Step 7: PCA・相関ヒートマップ・Venn
 ├── fastq/                 # 入力FASTQファイル (gitignore)
@@ -352,7 +352,7 @@ MACS3_ENV="$HOME/venvs/venv_macs3/bin/activate"
 | `4a` | グループごと BAM マージ + blacklist 除去 |
 | `4b` | スケールファクター算出 (`04a_scale_factor.R`) |
 | `4c` | bamCoverage → bigWig 生成 (CPM + scale factor) |
-| `5` | DAR 検出 (edgeR QL、全ペアワイズ比較) |
+| `5` | DAR 検出 (edgeR LRT、全ペアワイズ比較) |
 | `6` | HOMER findMotifsGenome.pl (up/down DAR 別) |
 | `7` | PCA / 相関ヒートマップ / 散布図 / Venn 図 |
 
@@ -560,7 +560,7 @@ SUMMIT_HALFWIDTH=500
 | 変数 | 説明 | デフォルト |
 |---|---|---|
 | `DAR_FDR` | FDR カットオフ | `0.05` |
-| `DAR_LFC` | 最小 \|logFC\| | `1` |
+| `DAR_LFC` | 最小 \|logFC\| | `0.5` |
 
 ### Step 6: HOMER
 
