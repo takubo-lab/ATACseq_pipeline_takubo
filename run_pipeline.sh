@@ -72,7 +72,11 @@ while [[ $# -gt 0 ]]; do
       IFS=',' read -ra _specs <<< "$2"
       for _s in "${_specs[@]}"; do
         parse_stage "$_s"
-        STEP_FROM_SUB["${PARSED_STEP}"]="${PARSED_SUB}"
+        if [[ -z "${STEP_FROM_SUB[${PARSED_STEP}]:-}" ]]; then
+          STEP_FROM_SUB["${PARSED_STEP}"]="${PARSED_SUB}"
+        elif [[ -n "${PARSED_SUB}" && "${PARSED_SUB}" < "${STEP_FROM_SUB[${PARSED_STEP}]}" ]]; then
+          STEP_FROM_SUB["${PARSED_STEP}"]="${PARSED_SUB}"
+        fi
       done
       shift 2 ;;
     --config)
