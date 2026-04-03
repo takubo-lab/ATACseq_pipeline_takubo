@@ -425,8 +425,8 @@ PEAK_LOGCPM_THRESHOLD="auto"  # 自動検出 (確認省略したい場合)
 |---|---|---|---|
 | `MACS3_FORMAT` | `BAM` | `BAMPE` | `BAMPE` |
 | `MACS3_NOMODEL` | `true` | `true` | `true` |
-| `MACS3_EXTSIZE` | `100` | `""` (省略) | `""` (省略) |
-| `MACS3_SHIFT` | `-50` | `""` (省略) | `""` (省略) |
+| `MACS3_EXTSIZE` | `200` | `""` (省略) | `""` (省略) |
+| `MACS3_SHIFT` | `-100` | `""` (省略) | `""` (省略) |
 | `SUMMIT_HALFWIDTH` | `125` (→250bp) | `500` (→1000bp) | `125` (→250bp) |
 
 **設定例 (CUT&RUN の場合):**
@@ -538,8 +538,8 @@ SUMMIT_HALFWIDTH=500
 | `MACS3_PVALUE` | MACS3 p-value カットオフ | `0.01` |
 | `MACS3_FORMAT` | `-f` オプション (`BAM`=ATAC, `BAMPE`=CUT&Tag/CUT&RUN) | `BAM` |
 | `MACS3_NOMODEL` | `--nomodel` を使用 (ATAC/CUT&Tag/CUT&RUN いずれも `true`) | `true` |
-| `MACS3_EXTSIZE` | `--extsize` (ATACは`100`, CUT&Tag/CUT&RUNは`""`) | `100` |
-| `MACS3_SHIFT` | `--shift` (ATACは`-50`, CUT&Tag/CUT&RUNは`""`) | `-50` |
+| `MACS3_EXTSIZE` | `--extsize` (ATACは`200`, CUT&Tag/CUT&RUNは`""`) | `200` |
+| `MACS3_SHIFT` | `--shift` (ATACは`-100`, CUT&Tag/CUT&RUNは`""`) | `-100` |
 | `MACS3_CONTROL_BAMS` | MACS3 control 用 BAM 配列。複数指定時は Step 2 で merge してから使用 | `()` |
 | `SUMMIT_HALFWIDTH` | 固定長ピークの半幅 (bp)。最終ピーク = ×2 | `125` (250bp) |
 

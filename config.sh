@@ -63,7 +63,7 @@ MAX_RAM_RECORDS=2500000   # picard MAX_RECORDS_IN_RAM (≈ RAM(MB) / 4 を目安
 #  │              │  Bowtie2 / Trimming                  │  MACS3                                       │
 #  │              │  -X    │ MAPQ  │ Trim品質/長さ        │  -f    │ nomodel │ extsize │ shift │ Peak幅  │
 #  ├──────────────┼────────┼───────┼─────────────────────┼────────┼─────────┼─────────┼───────┼─────────┤
-#  │ ATAC-seq     │  700   │  -    │ デフォルト           │  BAM   │  true   │   100   │  -50  │  125bp  │
+#  │ ATAC-seq     │  700   │  -    │ デフォルト           │  BAM   │  true   │   200   │ -100  │  125bp  │
 #  │ CUT&Tag      │  700   │  -    │ デフォルト           │  BAMPE │  true   │    -    │   -   │  500bp  │
 #  │ CUT&RUN      │ 1000   │  30   │ --quality 30 -L 15  │  BAMPE │  true   │    -    │   -   │  125bp  │
 #  └──────────────┴────────┴───────┴─────────────────────┴────────┴─────────┴─────────┴───────┴─────────┘
@@ -104,8 +104,8 @@ NFR_MAXFRAG=200
 MACS3_PVALUE="0.01"          # p-value カットオフ
 MACS3_FORMAT="BAM"           # -f : BAM (ATAC) / BAMPE (CUT&Tag/CUT&RUN)
 MACS3_NOMODEL="true"         # --nomodel : ATAC=true / CUT&Tag=true / CUT&RUN=true
-MACS3_EXTSIZE="100"          # --extsize : ATAC=100 / CUT&Tag="" / CUT&RUN=""  (空=省略)
-MACS3_SHIFT="-50"            # --shift   : ATAC=-50 / CUT&Tag="" / CUT&RUN=""  (空=省略)
+MACS3_EXTSIZE="200"          # --extsize : ATAC=200 / CUT&Tag="" / CUT&RUN=""  (空=省略)
+MACS3_SHIFT="-100"           # --shift   : ATAC=-100 / CUT&Tag="" / CUT&RUN=""  (空=省略)
 
 # CUT&RUN などでバックグラウンド BAM を使う場合に指定
 # 例:

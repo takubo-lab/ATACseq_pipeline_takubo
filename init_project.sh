@@ -65,7 +65,7 @@ case "$GENOME" in
     HOMER_GENOME="mm10"
     STANDARD_CHR_EXPR='$(printf '\''chr%s '\'' {1..19} X)'
     BOWTIE2_INDEX="/home/stemcell/Genome/mm10/mm10"
-    BLACKLIST="/home/stemcell/Genome/mm10/mm10_blacklist_v2.bed"
+    BLACKLIST="/home/stemcell/Genome/mm10/mm10.blacklist.v2_sorted.bed"
     CHROM_SIZES="/home/stemcell/Genome/mm10/mm10.chrom.sizes"
     ;;
 esac
@@ -142,7 +142,11 @@ NFR_MAXFRAG=200
 #  STEP 2 — PEAK CALLING
 # =============================================================================
 MACS3_PVALUE="0.01"
-MACS3_FORMAT="BAMPE"
+MACS3_FORMAT="BAM"
+MACS3_NOMODEL="true"
+MACS3_EXTSIZE="200"
+MACS3_SHIFT="-100"
+MACS3_CONTROL_BAMS=()
 SUMMIT_HALFWIDTH=125
 
 # =============================================================================
