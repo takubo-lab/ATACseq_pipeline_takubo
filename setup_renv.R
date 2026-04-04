@@ -48,12 +48,22 @@ if ("--update" %in% args) {
 
   renv::restore(prompt = FALSE)
 
+  supplemental <- c(
+    fgsea = "bioc::fgsea",
+    yaml = "yaml"
+  )
+  missing_supplemental <- names(supplemental)[!vapply(names(supplemental), requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing_supplemental) > 0) {
+    cat("\n[INFO] 追加パッケージをインストールします: ", paste(missing_supplemental, collapse = ", "), "\n", sep = "")
+    renv::install(unname(supplemental[missing_supplemental]))
+  }
+
   # 検証
   cat("\n=== パッケージ検証 ===\n")
   required <- c(
     "GenomicRanges", "csaw", "edgeR", "BiocParallel",
     "ggplot2", "ggrepel", "pheatmap", "RColorBrewer",
-    "tidyverse", "data.table", "ggvenn"
+    "tidyverse", "data.table", "ggvenn", "fgsea", "yaml"
   )
 
   all_ok <- TRUE

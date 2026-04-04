@@ -35,6 +35,9 @@ figure_size:
   barplot:
     width: 10
     height: 6
+  fgsea_bar:
+    width: 11
+    height: 7
 
 # ----------------------------------------------------------
 # 出力形式
@@ -106,3 +109,10 @@ heatmap:
   cluster_cols: true
   scale: "row"                  # "row", "column", "none"
   top_n: 50                     # 表示する上位変動遺伝子数
+
+# ----------------------------------------------------------
+# Peak-set enrichment
+# ----------------------------------------------------------
+fgsea:
+  top_n_plot: 20
+  bar_width: 0.7

@@ -125,6 +125,10 @@ parameters:
   binsize: ${BINSIZE}
   dar_fdr: "${DAR_FDR}"
   dar_lfc: "${DAR_LFC}"
+  fgsea_reference_bed: "${FGSEA_REFERENCE_BED:-}"
+  fgsea_min_size: ${FGSEA_MIN_SIZE:-0}
+  fgsea_max_size: ${FGSEA_MAX_SIZE:-0}
+  fgsea_padj: "${FGSEA_PADJ:-}"
 EOF
 
   echo "  Provenance recorded: ${provenance_file}"

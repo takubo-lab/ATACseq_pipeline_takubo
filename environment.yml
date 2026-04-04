@@ -30,12 +30,14 @@ dependencies:
   - bioconductor-csaw=1.44.0
   - bioconductor-edger=4.8.2
   - bioconductor-biocparallel=1.44.0
+  - bioconductor-fgsea
   - r-tidyverse=2.0.0
   - r-data.table=1.17.8
   - r-ggplot2=4.0.1
   - r-pheatmap=1.0.13
   - r-ggrepel=0.9.6
   - r-ggvenn=0.1.10
+  - r-yaml
 
   # --- Utilities ---
   - pigz=2.8

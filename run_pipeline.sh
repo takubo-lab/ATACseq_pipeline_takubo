@@ -3,7 +3,7 @@
 #  ATAC-seq Pipeline — Master Orchestrator
 #
 #  使い方:
-#    ./run_pipeline.sh                   # 全ステップ実行 (1a → 7)
+#    ./run_pipeline.sh                   # 全ステップ実行 (1a → 8)
 #    ./run_pipeline.sh --from 3          # step 3 以降を実行
 #    ./run_pipeline.sh --from 4b         # step 4 の substep b 以降を実行
 #    ./run_pipeline.sh --to 4            # step 1–4 を実行
@@ -26,12 +26,14 @@
 #  5 : DAR 検出 (edgeR LRT)
 #  6 : HOMER モチーフ解析
 #  7 : PCA・可視化
+#  8a: 外部 accessibility site BED を共通 peak universe に正規化
+#  8b: peak-set enrichment (fgsea-like)
 #
 #  ── よくある再実行例 ────────────────────────────────────
 #  SUMMIT_HALFWIDTH を変えた  → ./run_pipeline.sh --from 2b
 #  BINSIZE を変えた           → ./run_pipeline.sh --from 4c
 #  閾値確認後に再実行         → ./run_pipeline.sh --from 3b
-#  DAR/HOMER/PCA だけやり直し → ./run_pipeline.sh --steps 5,6,7
+#  DAR/HOMER/PCA/Enrichment だけやり直し → ./run_pipeline.sh --steps 5,6,7,8
 # =============================================================================
 set -euo pipefail
 IFS=$'\n\t'
@@ -43,7 +45,7 @@ PIPELINE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 FROM_STEP=1
 FROM_SUB=""
-TO_STEP=7
+TO_STEP=8
 ONLY_STEPS=""          # --steps 用 (カンマ区切り, 例: "2b,5,6")
 FORCE="false"
 CONFIG_FILE=""         # --config 用 (外部プロジェクトの config.sh)
@@ -233,6 +235,7 @@ fi
 
 # --- 設定変数を R スクリプトに渡す環境変数として export ---
 export PIPELINE_DIR="${DIR}"
+export PIPELINE_ROOT="${PIPELINE_ROOT}"
 export PIPELINE_SAMPLES="${SAMPLES_TSV}"
 export PIPELINE_BLACKLIST="${BLACKLIST}"
 export PIPELINE_THREADS="${THREADS}"
@@ -246,6 +249,13 @@ export PIPELINE_PLOTS_DIR="${DIR}/${DIR_PLOTS}"
 export PIPELINE_THRESHOLD="${PEAK_LOGCPM_THRESHOLD}"
 export PIPELINE_DAR_FDR="${DAR_FDR}"
 export PIPELINE_DAR_LFC="${DAR_LFC}"
+export PIPELINE_FGSEA_MIN_SIZE="${FGSEA_MIN_SIZE}"
+export PIPELINE_FGSEA_MAX_SIZE="${FGSEA_MAX_SIZE}"
+export PIPELINE_FGSEA_PADJ="${FGSEA_PADJ}"
+export PIPELINE_FGSEA_REFERENCE_BED="${FGSEA_REFERENCE_BED}"
+export PIPELINE_PEAK_SET_LIBRARY_DIR="${DIR}/${DIR_PEAKS}/${DIR_PEAKSET_LIBRARY}"
+export PIPELINE_FGSEA_RESULTS_DIR="${DIR}/${DIR_PEAKS}/${DIR_FGSEA}"
+export PIPELINE_ONLY_STEPS="${ONLY_STEPS}"
 
 # =============================================================================
 #  Step 1 – Trimming & Alignment  (1a=trim  1b=align  1c=dedup)
@@ -318,6 +328,13 @@ fi
 # =============================================================================
 if should_run 7; then
   run_step 7 "PCA & Visualization" Rscript "${SCRIPT_DIR}/07_PCA_plots.R"
+fi
+
+# =============================================================================
+#  Step 8 – Peak-set enrichment
+# =============================================================================
+if should_run 8; then
+  run_step 8 "Peak-set enrichment" bash "${SCRIPT_DIR}/08_peakset_enrichment.sh"
 fi
 
 echo ""

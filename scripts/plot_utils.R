@@ -172,7 +172,8 @@ save_plot <- function(plot, filename, type = "pca", outdir = ".", cfg = NULL) {
       pca     = list(width = 8, height = 6),
       volcano = list(width = 8, height = 6),
       heatmap = list(width = 10, height = 8),
-      barplot = list(width = 10, height = 6)
+      barplot = list(width = 10, height = 6),
+      fgsea_bar = list(width = 11, height = 7)
     ),
     output = list(format = "png", dpi = 300),
     colors = list(
@@ -184,7 +185,8 @@ save_plot <- function(plot, filename, type = "pca", outdir = ".", cfg = NULL) {
     pca     = list(point_size = 4, label_size = 3, show_labels = TRUE, ellipse = TRUE, ellipse_alpha = 0.1),
     volcano = list(point_size = 1.5, label_top_n = 15, alpha_ns = 0.3),
     heatmap = list(show_rownames = FALSE, show_colnames = TRUE, cluster_rows = TRUE,
-                   cluster_cols = TRUE, scale = "row", top_n = 50)
+                   cluster_cols = TRUE, scale = "row", top_n = 50),
+    fgsea   = list(top_n_plot = 20, bar_width = 0.7)
   )
 }
 
